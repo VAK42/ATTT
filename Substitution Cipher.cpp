@@ -66,7 +66,7 @@ int main() {
       cout << "\nEnter The Text: ";
       cin.ignore();
       getline(cin, text);
-      cout << "Enter The Substitution Key (26 Characters For Alphabet): ";
+      cout << "Enter The Key (26 Characters): ";
       cin >> key;
 
       if (key.length() != 26) {

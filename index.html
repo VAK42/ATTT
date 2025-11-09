@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VAK</title>
+  <style>
+    :root {
+      --primaryColor: #4CAF50;
+      --secondaryColor: #6c757d;
+      --successColor: #4CAF50;
+      --dangerColor: #dc3545;
+      --lightColor: #f8f9fa;
+      --darkColor: #222;
+      --white: #ffffff;
+      --textColor: #f0f0f0;
+      --glassBg: rgba(35, 35, 35, 0.7);
+      --glassBorder: rgba(255, 255, 255, 0.1);
+      --borderRadius: 0.75rem;
+      --shadow: 0 0.5rem 2rem 0 rgba(0, 0, 0, 0.37);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.6;
+      background: #1a1a1a;
+      color: var(--textColor);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .appContainer {
+      width: 90vw;
+      background: var(--glassBg);
+      backdrop-filter: blur(0.5rem);
+      -webkit-backdrop-filter: blur(0.5rem);
+      border-radius: var(--borderRadius);
+      border: 1px solid var(--glassBorder);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tabs {
+      display: flex;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.1);
+      border-bottom: 1px solid var(--glassBorder);
+    }
+
+    .tabLink {
+      padding: 1rem 2rem;
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: var(--secondaryColor);
+      border-bottom: 0.2rem solid transparent;
+    }
+
+    .tabLink:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .tabLink.active {
+      color: var(--primaryColor);
+      border-bottom-color: var(--primaryColor);
+    }
+
+    main {
+      flex-grow: 1;
+    }
+
+    .contentSection {
+      display: none;
+      padding: 1.5rem;
+      animation: fadeIn 0.5s;
+      height: 100%;
+    }
+
+    .contentSection.active#flashcardsSection {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .contentSection.active#quizSection {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(0.5rem);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .btn {
+      padding: 0.5rem 1.25rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border: 2px solid var(--primaryColor);
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btnPrimary {
+      background-color: var(--white);
+      color: var(--primaryColor);
+    }
+
+    .btnPrimary:hover {
+      background-color: var(--primaryColor);
+      color: var(--white);
+    }
+
+    .btnSecondary {
+      background-color: var(--white);
+      color: var(--primaryColor);
+    }
+
+    .btnSecondary:hover {
+      background-color: var(--primaryColor);
+      color: var(--white);
+    }
+
+    .flashcardContainer {
+      width: 100%;
+      height: 50vh;
+      perspective: 1500px;
+      margin-bottom: 1.5rem;
+    }
+
+    .flashcard {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.6s, box-shadow 0.6s;
+      cursor: pointer;
+    }
+
+    .flashcard.isFlipped {
+      transform: rotateY(180deg) scale(1.05);
+      box-shadow: 0 0.6rem 1.8rem rgba(0, 0, 0, 0.3);
+    }
+
+    .flashcardFace {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: var(--borderRadius);
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 1.75rem;
+      box-shadow: 0 0.4rem 1rem rgba(0, 0, 0, 0.1);
+      overflow-y: auto;
+    }
+
+    .flashcardFront {
+      background: var(--white);
+      color: var(--darkColor);
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: flex-start;
+      text-align: left;
+      padding: 2rem;
+    }
+
+    .flashcardFrontQuestion {
+      font-size: 1.4rem;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+      color: var(--primaryColor);
+    }
+
+    .flashcardFrontOptions {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      font-weight: 400;
+    }
+
+    .flashcardBack {
+      background: var(--white);
+      color: var(--darkColor);
+      transform: rotateY(180deg);
+      font-size: 1.5rem;
+      font-weight: 400;
+    }
+
+    .flashcardNav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      max-width: 25rem;
+    }
+
+    #fcCounter {
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: var(--secondaryColor);
+    }
+
+    .quizContainer {
+      width: 100%;
+    }
+
+    #quizQuestion {
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      line-height: 1.4;
+      color: var(--white);
+    }
+
+    #quizOptions {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .optionBtn {
+      width: 100%;
+      padding: 1rem;
+      font-size: 1rem;
+      text-align: left;
+      background-color: transparent;
+      border: 0.125rem solid var(--primaryColor);
+      border-radius: 0.375rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: var(--textColor);
+    }
+
+    .optionBtn:hover:not(:disabled) {
+      background-color: rgba(76, 175, 80, 0.2);
+    }
+
+    .optionBtn:disabled {
+      cursor: not-allowed;
+      opacity: 0.8;
+    }
+
+    .optionBtn.correct {
+      background-color: rgba(76, 175, 80, 0.3);
+      border-color: var(--successColor);
+      color: var(--white);
+      font-weight: 700;
+    }
+
+    .optionBtn.wrong {
+      background-color: rgba(220, 53, 69, 0.2);
+      border-color: var(--dangerColor);
+      color: var(--white);
+      font-weight: 700;
+    }
+
+    #quizFeedback {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+    }
+
+    #quizResult {
+      text-align: center;
+      padding: 1.25rem;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: var(--borderRadius);
+    }
+
+    #quizResult h2 {
+      margin-bottom: 0.5rem;
+      color: var(--primaryColor);
+    }
+
+    @media (min-width: 40em) {
+      .quizOptions {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 40em) {
+      body {
+        padding: 0;
+      }
+
+      .appContainer {
+        width: 100vw;
+        min-height: 100vh;
+        border-radius: 0;
+      }
+
+      .contentSection {
+        padding: 1rem;
+      }
+
+      .flashcardContainer {
+        height: 45vh;
+      }
+
+      .flashcardFrontQuestion {
+        font-size: 1.2rem;
+      }
+
+      .flashcardFrontOptions {
+        font-size: 1rem;
+      }
+
+      .flashcardBack {
+        font-size: 1.2rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="appContainer">
+    <nav class="tabs">
+      <button class="tabLink active" data-tab="flashcards">
+        Flashcards
+      </button>
+      <button class="tabLink" data-tab="quiz">
+        Quiz
+      </button>
+    </nav>
+    <main>
+      <section id="flashcardsSection" class="contentSection active">
+        <div class="flashcardContainer">
+          <div class="flashcard" id="flashcard">
+            <div class="flashcardFace flashcardFront" id="flashcardQ">
+            </div>
+            <div class="flashcardFace flashcardBack" id="flashcardA">
+            </div>
+          </div>
+        </div>
+        <div class="flashcardNav">
+          <button class="btn btnSecondary" id="fcPrev">Previous</button>
+          <span id="fcCounter">1 / 50</span>
+          <button class="btn btnPrimary" id="fcNext">Next</button>
+        </div>
+      </section>
+      <section id="quizSection" class="contentSection">
+        <div class="quizContainer">
+          <div id="quizGame">
+            <h2 id="quizQuestion">Question Will Load Here...</h2>
+            <div id="quizOptions">
+            </div>
+            <div id="quizFeedback"></div>
+            <button class="btn btnPrimary" id="quizNext" style="display: none;">Next</button>
+          </div>
+          <div id="quizResult" style="display: none;">
+            <h2>Completed!</h2>
+            <p id="quizScoreText">Your Score: 0 / 50</p>
+            <button class="btn btnPrimary" id="quizRestart" style="margin-top: 1.25rem;">Restart</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script>
+    const quizData = [
+      { "Q": "Mã Caesar Là Một Loại Mã Hóa:", "A": "Đồng Bộ", "B": "Thay Thế Đơn", "C": "Đa Bảng", "D": "Dịch Chuyển XOR", "CA": "B" },
+      { "Q": "Kết Quả Của Mã Caesar Với Khóa = 3 Khi Mã Hóa Từ \"HELLO\" Là:", "A": "KHOOR", "B": "IFMMP", "C": "JGNNQ", "D": "LIPPS", "CA": "A" },
+      { "Q": "Giải Mã \"JGNNQ\" Bằng Caesar Với Khóa = 2 Được:", "A": "HELLO", "B": "IFMMP", "C": "GDKKN", "D": "HFNNS", "CA": "A" },
+      { "Q": "Với Bảng Chữ Cái A=0,...,Z=25 -> Mã Vigenère Với Khóa \"KEY\" Mã Hóa Từ \"HELLO\" Thành:", "A": "RIJVS", "B": "IGOPT", "C": "HFNOS", "D": "LFSOT", "CA": "A" },
+      { "Q": "Playfair Là Một Kỹ Thuật Mã Hóa:", "A": "Thay Thế Từng Ký Tự", "B": "Thay Thế Theo Cặp Ký Tự", "C": "Mã Hóa Luồng", "D": "Mã Hóa Khóa Công Khai", "CA": "B" },
+      { "Q": "Mã Hill Là Mã Hóa Dựa Trên:", "A": "Xoay Vòng", "B": "XOR", "C": "Phép Nhân Ma Trận", "D": "Bảng Thay Thế", "CA": "C" },
+      { "Q": "Trong Mã Hill Bậc 2 -> Để Mã Hóa -> Cần Một Ma Trận:", "A": "1x2", "B": "2x1", "C": "2x2", "D": "3x3", "CA": "C" },
+      { "Q": "Giải Mã Mã Hill Cần:", "A": "Ma Trận Đảo Của Khóa", "B": "Bảng Dịch Chuyển", "C": "Khóa Bí Mật", "D": "Bảng XOR", "CA": "A" },
+      { "Q": "Mã Hóa Affine Dùng Công Thức:", "A": "E(x) = (ax + b) mod 26", "B": "E(x) = ax^b mod 26", "C": "E(x) = x + b", "D": "E(x) = a mod x", "CA": "A" },
+      { "Q": "Với Affine: a = 5 -> b = 8 -> Mã Hóa 'C' (C=2) Được:", "A": "18 (R)", "B": "10 (K)", "C": "12 (M)", "D": "4 (E)", "CA": "A" },
+      { "Q": "Trong Mã Hóa Cổ Điển -> Sự Khác Biệt Giữa Mã Caesar Và Vigenère Là:", "A": "Caesar Dùng Khóa Dài Hơn", "B": "Vigenère Dùng Khóa Lặp", "C": "Caesar Không Mã Hóa", "D": "Vigenère Chỉ Mã Hóa Số", "CA": "B" },
+      { "Q": "Mã Hóa Cổ Điển KHÔNG Bao Gồm:", "A": "Caesar", "B": "Vigenère", "C": "RSA", "D": "Affine", "CA": "C" },
+      { "Q": "Công Cụ Phổ Biến Nhất Để Phá Mã Cổ Điển Là:", "A": "Phân Tích Tần Số", "B": "Tấn Công Brute-Force", "C": "Hàm Băm", "D": "Chữ Ký Số", "CA": "A" },
+      { "Q": "Với Caesar -> Tổng Số Khóa Có Thể Thử Là:", "A": "13", "B": "25", "C": "26", "D": "52", "CA": "B" },
+      { "Q": "Để Giải Mã Caesar -> Cần:", "A": "Hàm Băm", "B": "Khóa Đối Xứng", "C": "Khóa Dịch Ngược", "D": "Bảng S-box", "CA": "C" },
+      { "Q": "DES Là Viết Tắt Của:", "A": "Digital Encryption Standard", "B": "Data Encryption Standard", "C": "Dynamic Encryption Scheme", "D": "Dual Encryption Service", "CA": "B" },
+      { "Q": "DES Sử Dụng Độ Dài Khóa:", "A": "56-bit", "B": "64-bit", "C": "128-bit", "D": "192-bit", "CA": "A" },
+      { "Q": "AES Hỗ Trợ Các Độ Dài Khóa Sau:", "A": "64, 128, 256", "B": "128, 192, 256", "C": "128, 160, 192", "D": "192, 224, 256", "CA": "B" },
+      { "Q": "RSA Là Một Thuật Toán:", "A": "Mã Hóa Đối Xứng", "B": "Băm", "C": "Mã Hóa Công Khai", "D": "Mã Hóa Luồng", "CA": "C" },
+      { "Q": "Cặp Khóa Trong RSA Gồm:", "A": "Khóa Công Khai Và Khóa Riêng", "B": "Hai Khóa Riêng", "C": "Hai Khóa Công Khai", "D": "Khóa Và Mật Khẩu", "CA": "A" },
+      { "Q": "Trong RSA -> Hàm φ(n) Với n = p * q Là:", "A": "(p-1)(q-1)", "B": "p+q", "C": "n-1", "D": "(p+1)(q+1)", "CA": "A" },
+      { "Q": "RSA: n = 55 -> e = 3 -> Bản Rõ M = 10 -> Mã Hóa C = M^e mod n =", "A": "100", "B": "1000 mod 55 = 10", "C": "10^3 mod 55 = 1000 mod 55 = ?", "D": "20", "CA": "B" },
+      { "Q": "RSA: Giải Mã C = 35 Với d = 27 -> n = 55. M = ?", "A": "M = 35^27 mod 55 (Dùng Casio Để Tính)", "B": "M = 55^27 mod 35", "C": "M = 27^35 mod 55", "D": "M = 35^27 mod 35", "CA": "A" },
+      { "Q": "AES Hoạt Động Theo:", "A": "Thay Thế Và Hoán Vị", "B": "XOR Liên Tục", "C": "Phép Cộng Modulo", "D": "Ma Trận Nghịch Đảo", "CA": "A" },
+      { "Q": "Thuật Toán Hiện Đại Nào Sau Đây KHÔNG Phải Là Mã Hóa Đối Xứng:", "A": "AES", "B": "DES", "C": "Blowfish", "D": "RSA", "CA": "D" },
+      { "Q": "RSA Được Xem Là An Toàn Vì:", "A": "Dễ Thực Hiện", "B": "Không Thể Bị Phá", "C": "Khó Phân Tích Nhân Tử Số Lớn", "D": "Không Dùng Khóa", "CA": "C" },
+      { "Q": "RSA Yêu Cầu p Và q Là:", "A": "Hai Số Nguyên Bất Kỳ", "B": "Hai Số Lẻ", "C": "Hai Số Nguyên Tố Lớn", "D": "Hai Số Chẵn", "CA": "C" },
+      { "Q": "AES Sử Dụng Bao Nhiêu Vòng Lặp Cho Khóa 128-bit?", "A": "10", "B": "12", "C": "14", "D": "16", "CA": "A" },
+      { "Q": "Thuật Toán Mã Hóa Hiện Đại Đầu Tiên Được Công Nhận Rộng Rãi Là:", "A": "AES", "B": "RSA", "C": "DES", "D": "IDEA", "CA": "C" },
+      { "Q": "Một Ưu Điểm Của Mã Hóa Đối Xứng Là:", "A": "Bảo Mật Cao", "B": "Khó Chia Sẻ Khóa", "C": "Tốc Độ Nhanh", "D": "Dễ Hiểu", "CA": "C" },
+      { "Q": "Hàm Băm Là Một Hàm:", "A": "Một Chiều", "B": "Hai Chiều", "C": "Tuyến Tính", "D": "Phân Kỳ", "CA": "A" },
+      { "Q": "Đặc Điểm Của Hàm Băm Tốt:", "A": "Dễ Đoán Kết Quả", "B": "Tạo Cùng Đầu Ra Cho Đầu Vào Gần Giống", "C": "Khó Đảo Ngược", "D": "Có Thể Giải Mã", "CA": "C" },
+      { "Q": "MD5 Tạo Ra Đầu Ra Bao Nhiêu Bit?", "A": "128", "B": "160", "C": "256", "D": "512", "CA": "A" },
+      { "Q": "SHA-256 Tạo Ra Bao Nhiêu Bit?", "A": "128", "B": "160", "C": "256", "D": "512", "CA": "C" },
+      { "Q": "Hàm Băm Dùng Để:", "A": "Mã Hóa", "B": "Kiểm Tra Tính Toàn Vẹn", "C": "Tăng Tốc Mạng", "D": "Giải Mã Dữ Liệu", "CA": "B" },
+      { "Q": "Hàm Băm Tốt Phải Có Tính Chất:", "A": "Không Đụng Độ (Collision-resistant)", "B": "Dễ Tính", "C": "Có Thể Đảo Ngược", "D": "Sinh Ra Khóa", "CA": "A" },
+      { "Q": "Thuật Toán Nào Sau Đây Là Hàm Băm:", "A": "RSA", "B": "SHA-1", "C": "DES", "D": "AES", "CA": "B" },
+      { "Q": "SHA-1 Tạo Ra Bao Nhiêu Bit?", "A": "128", "B": "160", "C": "256", "D": "512", "CA": "B" },
+      { "Q": "Chữ Ký Số Dùng Để:", "A": "Mã Hóa Văn Bản", "B": "Xác Minh Nguồn Gốc Và Tính Toàn Vẹn", "C": "Mã Hóa File Nhị Phân", "D": "Phát Hiện Virus", "CA": "B" },
+      { "Q": "Chữ Ký Số Sử Dụng Thuật Toán:", "A": "Mã Hóa Đối Xứng", "B": "Mã Hóa Công Khai", "C": "Hàm XOR", "D": "Thuật Toán Luồng", "CA": "B" },
+      { "Q": "Quy Trình Tạo Chữ Ký Số Gồm:", "A": "Mã Hóa Văn Bản", "B": "Mã Hóa Khóa", "C": "Băm Thông Điệp Và Mã Hóa Băm", "D": "So Sánh Khóa", "CA": "C" },
+      { "Q": "Chữ Ký Số Được Tạo Bằng:", "A": "Khóa Công Khai Của Người Nhận", "B": "Khóa Riêng Của Người Gửi", "C": "Khóa Đối Xứng", "D": "Hàm Ngẫu Nhiên", "CA": "B" },
+      { "Q": "Để Xác Minh Chữ Ký Số -> Người Nhận Dùng:", "A": "Khóa Riêng Của Mình", "B": "Khóa Công Khai Của Người Gửi", "C": "Hàm Băm", "D": "Mật Khẩu", "CA": "B" },
+      { "Q": "Tính Toán: Mã Hóa Băm Bằng MD5 Của \"abc\" Có Độ Dài Đầu Ra Là:", "A": "16 Byte", "B": "20 Byte", "C": "32 Byte", "D": "64 Byte", "CA": "A" },
+      { "Q": "Thuật Toán Băm Yếu Hiện Nay Là:", "A": "MD5", "B": "SHA-2", "C": "SHA-256", "D": "SHA-3", "CA": "A" },
+      { "Q": "Tấn Công Sinh Hai Đầu Vào Cho Cùng Giá Trị Băm Gọi Là:", "A": "Brute-Force", "B": "Collision", "C": "Pre-image", "D": "Post-image", "CA": "B" },
+      { "Q": "Mã Hóa Văn Bản Trước Khi Ký Số Có Cần Thiết Không?", "A": "Có", "B": "Không", "C": "Tùy Hệ Thống", "D": "Không Bao Giờ", "CA": "B" },
+      { "Q": "Hàm Băm Có Đảm Bảo Tính Bảo Mật Không?", "A": "Có", "B": "Không", "C": "Một Phần", "D": "Tùy Độ Dài", "CA": "B" },
+      { "Q": "Digital Signature Algorithm (DSA) Là:", "A": "Thuật Toán Mã Hóa Khóa", "B": "Thuật Toán Tạo Chữ Ký Số", "C": "Hàm Băm", "D": "Chuẩn Nén Dữ Liệu", "CA": "B" },
+      { "Q": "Nếu Chữ Ký Số Không Khớp Sau Xác Minh -> Điều Đó Có Thể Do:", "A": "Văn Bản Đã Bị Thay Đổi", "B": "Sai Khóa Công Khai", "C": "Hàm Băm Sai", "D": "Tất Cả Đều Đúng", "CA": "D" }
+    ];
+    document.addEventListener('DOMContentLoaded', () => {
+      const tabs = document.querySelectorAll('.tabLink');
+      const sections = document.querySelectorAll('.contentSection');
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => t.classList.remove('active'));
+          sections.forEach(s => s.classList.remove('active'));
+          tab.classList.add('active');
+          document.getElementById(tab.dataset.tab + 'Section').classList.add('active');
+        });
+      });
+      let currentFlashcardIndex = 0;
+      const flashcard = document.getElementById('flashcard');
+      const flashcardQ = document.getElementById('flashcardQ');
+      const flashcardA = document.getElementById('flashcardA');
+      const fcPrev = document.getElementById('fcPrev');
+      const fcNext = document.getElementById('fcNext');
+      const fcCounter = document.getElementById('fcCounter');
+      const optionsKeys = ['A', 'B', 'C', 'D'];
+      function loadFlashcard(index) {
+        const item = quizData[index];
+        let qText = item.Q;
+        let optionsHtml = optionsKeys
+          .filter(key => item[key])
+          .map(key => `<div>${key}. ${item[key]}</div>`)
+          .join('');
+        flashcardQ.innerHTML = `<div class="flashcardFrontQuestion">${qText}</div><div class="flashcardFrontOptions">${optionsHtml}</div>`;
+        let aText = item[item.CA];
+        flashcardA.textContent = `${item.CA}. ${aText}`;
+        fcCounter.textContent = `${index + 1} / ${quizData.length}`;
+        flashcard.classList.remove('isFlipped');
+      }
+      flashcard.addEventListener('click', () => {
+        flashcard.classList.toggle('isFlipped');
+      });
+      fcNext.addEventListener('click', () => {
+        currentFlashcardIndex = (currentFlashcardIndex + 1) % quizData.length;
+        loadFlashcard(currentFlashcardIndex);
+      });
+      fcPrev.addEventListener('click', () => {
+        currentFlashcardIndex = (currentFlashcardIndex - 1 + quizData.length) % quizData.length;
+        loadFlashcard(currentFlashcardIndex);
+      });
+      let currentQuizIndex = 0;
+      let quizScore = 0;
+      let quizAnswered = false;
+      const quizGame = document.getElementById('quizGame');
+      const quizResult = document.getElementById('quizResult');
+      const quizQuestion = document.getElementById('quizQuestion');
+      const quizOptionsContainer = document.getElementById('quizOptions');
+      const quizFeedback = document.getElementById('quizFeedback');
+      const quizNextBtn = document.getElementById('quizNext');
+      const quizRestartBtn = document.getElementById('quizRestart');
+      const quizScoreText = document.getElementById('quizScoreText');
+      function loadQuizQuestion(index) {
+        const item = quizData[index];
+        quizQuestion.textContent = item.Q;
+        quizOptionsContainer.innerHTML = '';
+        quizFeedback.textContent = '';
+        quizNextBtn.style.display = 'none';
+        quizAnswered = false;
+        optionsKeys.forEach(opt => {
+          if (item[opt]) {
+            const btn = document.createElement('button');
+            btn.classList.add('optionBtn');
+            btn.dataset.option = opt;
+            btn.textContent = `${opt}. ${item[opt]}`;
+            btn.addEventListener('click', selectAnswer);
+            quizOptionsContainer.appendChild(btn);
+          }
+        });
+      }
+      function selectAnswer(e) {
+        if (quizAnswered) return;
+        quizAnswered = true;
+        const selectedBtn = e.target;
+        const selectedOption = selectedBtn.dataset.option;
+        const correctOption = quizData[currentQuizIndex].CA;
+        const allOptionBtns = quizOptionsContainer.querySelectorAll('.optionBtn');
+        allOptionBtns.forEach(btn => btn.disabled = true);
+        if (selectedOption === correctOption) {
+          selectedBtn.classList.add('correct');
+          quizFeedback.textContent = "Correct!";
+          quizFeedback.style.color = 'var(--successColor)';
+          quizScore++;
+        } else {
+          selectedBtn.classList.add('wrong');
+          quizFeedback.textContent = "Incorrect!";
+          quizFeedback.style.color = 'var(--dangerColor)';
+          const correctBtn = quizOptionsContainer.querySelector(`[data-option="${correctOption}"]`);
+          if (correctBtn) {
+            correctBtn.classList.add('correct');
+          }
+        }
+        quizNextBtn.style.display = 'block';
+      }
+      quizNextBtn.addEventListener('click', () => {
+        currentQuizIndex++;
+        if (currentQuizIndex < quizData.length) {
+          loadQuizQuestion(currentQuizIndex);
+        } else {
+          showQuizResults();
+        }
+      });
+      function showQuizResults() {
+        quizGame.style.display = 'none';
+        quizResult.style.display = 'block';
+        quizScoreText.textContent = `Your Score: ${quizScore} / ${quizData.length}`;
+      }
+      quizRestartBtn.addEventListener('click', () => {
+        currentQuizIndex = 0;
+        quizScore = 0;
+        quizResult.style.display = 'none';
+        quizGame.style.display = 'block';
+        loadQuizQuestion(currentQuizIndex);
+      });
+      function init() {
+        loadFlashcard(currentFlashcardIndex);
+        loadQuizQuestion(currentQuizIndex);
+      }
+      init();
+    });
+  </script>
+</body>
+
+</html>
